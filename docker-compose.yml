@@ -1,0 +1,49 @@
+version: "3.8"
+
+services:
+  mongo:
+    image: mongo:7.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodata:/data/db
+
+  backend:
+    container_name: nawy_backend
+    restart: unless-stopped
+    image: nawy-backend:1.0.0
+    build:
+      context: backend
+      target: production
+      dockerfile: Dockerfile
+    ports:
+      - 9090:9090
+    networks:
+      - shared-network
+    depends_on:
+      - mongo
+
+  frontend:
+    container_name: nawy_frontend
+    restart: unless-stopped
+    image: nawy-frontend:1.0.0
+    build:
+      context: frontend/next-app
+      target: production
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    networks:
+      - shared-network
+    depends_on:
+      - backend
+
+volumes:
+  mongodata:
+    driver: local
+
+networks:
+  shared-network:
